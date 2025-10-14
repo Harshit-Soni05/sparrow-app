@@ -6,12 +6,16 @@
   import { Button, Tag } from "@sparrow/library/ui";
   import { onMount, tick } from "svelte";
   import { loadingState } from "@sparrow/common/store";
+  import { WorkspaceRole } from "@sparrow/common/enums";
 
   export let responseTestResults = [];
   export let responseTestMessage = "";
   export let tests;
   export let onFixTestScript;
   export let tabId;
+  export let isGuestUser;
+  export let isSharedWorkspace;
+  export let userRole;
 
   let filter: "all" | "passed" | "failed" = "all";
   let allBtn: HTMLSpanElement;
@@ -109,31 +113,28 @@
     >
       {#each filteredResults as testCases}
         <div
-          class="d-flex align-items-center ps-0 gap-1 w-100"
+          class="d-flex ps-0 gap-1 w-100 align-items-start"
           style="padding-left: 8px; padding: 6px;"
         >
           <div
-            style="width: 50px; align-items: center; display: flex; justify-content:flex-start; padding-left:8px;"
+            style="width: 60px; align-items: center; display: flex; justify-content:flex-start; padding-left:8px;"
           >
             <Tag
               type={testCases?.testStatus ? "green" : "orange"}
-              text={testCases?.testStatus ? "Pass" : "Fail"}
+              text={testCases?.testStatus ? "Passed" : "Failed"}
               size="small"
             />
           </div>
-
-          <p
-            style="font-size: 12px; font-weight:400; color: var(--text-ds-neutral-400); padding-left: 4px; margin-bottom:0px;"
-          >
-            {testCases?.testName}
-          </p>
-          {#if testCases?.testMessage}
+          <div style="calc(100% - 60px); flex:1;">
             <p
-              style="font-size: 12px; font-weight:400; color: var(--text-ds-neutral-400); margin-bottom:0px;"
+              style="word-break: break-word; font-size: 12px; font-weight:400; color: var(--text-ds-neutral-400); padding-left: 4px; margin-bottom:0px;"
             >
-              | Error: {testCases?.testMessage}
+              {testCases?.testName}
+              {testCases?.testMessage
+                ? `| AssertionError: ${testCases?.testMessage}`
+                : ``}
             </p>
-          {/if}
+          </div>
         </div>
       {/each}
     </div>
@@ -153,17 +154,20 @@
             Couldn't evaluate the test script: {responseTestMessage}
           </span>
         </p>
-        <Button
-          title="Fix Script"
-          startIcon={SparkleRegular}
-          type="outline-secondary"
-          loader={$loadingState.get(tabId + "-fix-test-script")}
-          onClick={async () => {
-            startLoading(tabId + "-fix-test-script");
-            await onFixTestScript();
-            stopLoading(tabId + "-fix-test-script");
-          }}
-        />
+        {#if !isGuestUser && userRole !== WorkspaceRole.WORKSPACE_VIEWER}
+          <Button
+            title="Fix Script"
+            startIcon={SparkleRegular}
+            type="outline-secondary"
+            loader={$loadingState.get(tabId + "-fix-test-script")}
+            disable={$loadingState.get(tabId + "-fix-test-script")}
+            onClick={async () => {
+              startLoading(tabId + "-fix-test-script");
+              await onFixTestScript();
+              stopLoading(tabId + "-fix-test-script");
+            }}
+          />
+        {/if}
       {:else}
         <div class="my-4">
           <SparrowLogo />
