@@ -119,10 +119,6 @@ jobs:
       - name: Set build datetime
         run: echo "BUILD_DATETIME=$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_ENV
 
-      - name: Rename Intel Mac updater file
-        run: |
-          find /Users/runner/work/sparrow-app/sparrow-app/apps/@sparrow-desktop/src-tauri/target/x86_64-apple-darwin/debug/bundle/macos -name "*.tar.gz" -exec bash -c 'mv "$1" "$(dirname "$1")/$(basename "$1" .tar.gz)_intel_mac.tar.gz"' _ {} \;
-          
       - name: Upload macOS DMG(Both archs) to S3
         run: |
           # Upload macOS (ARM64) DMG
